@@ -66,7 +66,7 @@ class VacacionesController extends Controller
                 
                 $historial = Vacacion::where('Employee_id', '=', $request['Employee_id'])->get();
 
-                $inicio = Carbon::parse($request['Start_date'])->diffInWeekdays($request['Ending_date']);
+                $inicio = Carbon::parse($request['Start_date'])->diffIndays($request['Ending_date']);
                 $dias = $inicio + 1; //Se suma una para que cuando solo se ocupe un dia aparezca
                 $dias = dias_menos_dias_festivos($dias, $request['Start_date'], $request['Ending_date']);
                 //dd($request['Saldo'] - $dias);

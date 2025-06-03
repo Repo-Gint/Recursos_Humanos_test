@@ -163,6 +163,11 @@ Route::post('Reporte/vacaciones', [
 	'as' => 'Reporte.vacaciones'
 ]);
 
+Route::post('Reporte/rotacion', [
+	'uses' => 'ReporteController@rotacion',
+	'as' => 'Reporte.rotacion'
+]);
+
 Route::get('orgchartpdf', function(){
 	$departamentos= Recursos_Humanos\Departamento::get();
 	$pdf = PDF::loadView('Pdf.orgchart', ['departamentos' => $departamentos])->setPaper('legal', 'landscape');

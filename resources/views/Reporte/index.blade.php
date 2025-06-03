@@ -96,7 +96,7 @@
                         </td>
                     </tr>
                     <tr >
-                        <th colspan="4">Vacaciones</th>
+                        <th colspan="5">Vacaciones</th>
                     </tr>
                     {!! Form::open(['route' => array('Reporte.vacaciones'), 'method' => 'POST']) !!}
                     <tr>
@@ -128,7 +128,7 @@
                             </div><br>
                             </div>
                             
-                            {!!  Form::select('Departaments[]', $departamentos, null, ['class' => 'form-control  ','multiple', 'placeholder' => 'Selecciona un departamento', 'id' => 'select-chose']) !!}
+                            {!!  Form::select('Departaments[]', $departamentos, null, ['class' => 'form-control select-chose','multiple', 'placeholder' => 'Selecciona un departamento']) !!}
                         
                         </td>
                         <td style="vertical-align: middle;">
@@ -149,6 +149,68 @@
                             {!! Form::close() !!}    
                         </td>
                     </tr>
+                    
+
+                    <tr >
+                        <th colspan="5">Rotacion de personal</th>
+                    </tr>
+                    {!! Form::open(['route' => array('Reporte.rotacion'), 'method' => 'POST']) !!}
+                    <tr>
+                        <td style="vertical-align: middle;">
+                            <label>
+                                {{ Form::radio('rep_rotacion', 'anual', null, ['class'=>'rep_rotacion' ]) }}
+                                {{ 'Concentrado'}}
+                            </label><br>
+                             <label>
+                                {{ Form::radio('rep_rotacion', 'altas', null, ['class'=>'rep_rotacion' ]) }}
+                                {{ 'Altas'}}
+                            </label><br>
+                            <label>
+                                {{ Form::radio('rep_rotacion', 'bajas', null, ['class'=>'rep_rotacion' ]) }}
+                                {{ 'Bajas'}}
+                            </label>
+                        </td>
+                        <td  colspan="2" style="vertical-align: middle; text-align: center;">
+                            <div id="calendario" style="display: none;">
+                            <div class="row" >
+                                <div class="col-lg-6">
+                                    <label>Fecha Inicio</label>
+                                    {!! Form::date('date1', null, ['class' => 'form-control']) !!}
+                                </div>
+                                <div class="col-lg-6">
+                                    <label>Fecha Fin</label>
+                                    {!! Form::date('date2', null, ['class' => 'form-control']) !!}
+                                </div>
+                            </div><br>
+                            </div>
+                            
+                            
+                        
+                            
+                           
+                            {!!  Form::select('Departaments[]', $departamentos, null, ['class' => 'form-control select-chose','multiple', 'placeholder' => 'Selecciona un departamento']) !!}
+                        
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <label>
+                                {{ Form::radio('formato', 'PDF', null) }}
+                                <i class="fa fa-file-pdf-o" style="color: red;"></i>
+                                {{ 'Pdf'}}
+                            </label><br>
+                            <label>
+                                {{ Form::radio('formato', 'XLS', null) }}
+                                <i class="fa fa-file-excel-o" style="color: green;"></i>
+                                {{ 'Excel'}}
+                            </label>
+                            
+                        </td>
+                        <td style="vertical-align: middle; text-align: center;">
+                            {!!  Form::submit('Exportar', ['class' => 'btn btn-default']); !!}
+                            {!! Form::close() !!}    
+                        </td>
+                    </tr>
+
+
                 </tbody>
                 
                     
@@ -179,6 +241,30 @@ $(document).ready(function(){
 });
 
  });
+
+ $(document).ready(function(){
+ $(".rep_rotacion").change(function () { //Rotacion de personal
+    if($('input:radio[name=rep_rotacion]:checked').val() == "anual" ){
+        $("#calendario").hide();
+    }
+        if($('input:radio[name=rep_rotacion]:checked').val() == "altas"){
+        $("#calendario").show();
+    }
+});
+
+ });
+ $(document).ready(function(){
+ $(".rep_rotacion").change(function () { //Rotacion de personal
+    if($('input:radio[name=rep_rotacion]:checked').val() == "anual" ){
+        $("#calendario").hide();
+    }
+        if($('input:radio[name=rep_rotacion]:checked').val() == "bajas"){
+        $("#calendario").show();
+    }
+});
+
+ });
+
 
 $("#select-chosen").chosen({
     no_results_text: "Oops, nothing found!",

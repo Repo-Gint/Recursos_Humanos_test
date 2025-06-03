@@ -75,6 +75,8 @@ function Formato ($date){
 	return date_format($date, "d.m.Y");
 }
 
+
+
 function Formato_ingles ($date){
 	$date=explode("-",$date);
 	return $date[0].$date[1].$date[2];
@@ -758,7 +760,22 @@ function Periodos_historial($empleado){
 	$array = array();
 	$i = 0;
 	foreach ($vacaciones as $periodo) {
-	   $array[$i] = $periodo->Period;
+	   $array[$i] = $periodo->Employee_id;
+	   $i++;
+	   
+	}
+	$coleccion = array_values(array_unique($array));
+	return $coleccion;
+
+}
+
+function contratos_empleado($empleado){
+
+	$contracts = $empleado->Contrataciones()->groupby('contracts.id')->get();
+	$array = array();
+	$i = 0;
+	foreach ($contracts as $contrato) {
+	   $array[$i] = $contrato->id;
 	   $i++;
 	   
 	}

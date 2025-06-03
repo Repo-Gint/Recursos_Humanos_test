@@ -17,6 +17,5 @@
     # Handle Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond $1 !^(index.php|css|js|images|robots.txt)
-    RewriteRule ^(.*)$ /Recursos_Humanos/index.php/$1 [L]
+    RewriteRule ^ index.php [L]
 </IfModule>

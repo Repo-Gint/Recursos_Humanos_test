@@ -15,7 +15,11 @@ use Recursos_Humanos\Exports\PuestosExport;
 use Recursos_Humanos\Exports\VacacionesExport;
 use Recursos_Humanos\Exports\Vacaciones_ConcentradoExport;
 use Recursos_Humanos\Exports\Vacaciones_FechasExport;
+use Recursos_Humanos\Exports\RotacionExportAltas;
+use Recursos_Humanos\Exports\RotacionExportBajas;
+use Recursos_Humanos\Exports\RotacionExport;
 use Maatwebsite\Excel\Facades\Excel;
+
 use Exception;
 class ReporteController extends Controller
 {
@@ -139,7 +143,7 @@ class ReporteController extends Controller
             ->join('employee_position', 'employees.id', '=', 'employee_position.Employee_id')
             ->join('positions', 'employee_position.Position_id', '=', 'positions.id')
             ->join('departaments', 'positions.Departament_id', '=', 'departaments.id');
-
+            
             $departamentos = Departamento::select('id', 'Departament_ES');
             
             
@@ -152,7 +156,7 @@ class ReporteController extends Controller
             }
 
             if($ban == 1){
-                $empleados = $query->where('employees.Active', '=', 1)->orderBy('Paternal', 'ASC')->get();
+                $empleados = $query->orderBy('Paternal', 'ASC')->get();
             }else{
                 for ($i=0; $i < count($request['Departaments']) ; $i++) { 
                     $query->orWhere('Departament_id', '=', $request['Departaments'][$i]);
@@ -182,8 +186,7 @@ class ReporteController extends Controller
                     return (new Vacaciones_ConcentradoExport($departamentos, $empleados))->download('concentrado_vacaciones.xlsx');
                 }
             }
-
-            if($request['tipo_reporte'] == "Por_fechas"){
+             if($request['tipo_reporte'] == "Por_fechas"){
                 /** Validación de reportes**/
                 if(empty($request['date1']) || empty($request['date2'])){
                     throw new Exception("Debe de elegir fecha de inicio y fecha de fin.");
@@ -195,6 +198,113 @@ class ReporteController extends Controller
                 }
                 if($request['formato'] == "XLS"){
                      return (new Vacaciones_FechasExport($departamentos, $empleados, $request['date1'], $request['date2'], $request['Departaments']))->download('fechas_vacaciones.xlsx');
+                }
+            }
+
+
+
+        }catch(Exception $e){
+            flash('Lo siento, en el proceso ocurrieron errores: '.$e->getMessage(), 'danger');
+            return redirect()->route('Reporte.index');
+        } 
+       
+    }
+
+
+    public function rotacion (Request $request){
+        try{
+
+            /** Validación de reportes**/
+            if(empty($request['rep_rotacion'])){
+                throw new Exception("Debe de seleccionar una opción de reporte.");
+            }
+
+            if($request['Departaments'][0] == null){
+                throw new Exception("Debe de seleccionar algun departamento.");
+            }
+
+            if(empty($request['formato'])){
+                throw new Exception("Debe de elegir el formato a exportar.");
+            }
+            /** Validación de reportes **/
+
+             $query = Empleado::select ('employees.id', 'employees.Code','employees.Names', 'employees.Paternal', 'employees.Maternal', 'positions.Position_ES', 'positions.Departament_id','employees.Active','outputs.Type')
+            ->join('employee_position_history', 'employees.id', '=', 'employee_position_history.Employee_id')
+            ->join('positions', 'employee_position_history.Position_id', '=', 'positions.id')
+            ->join('departaments', 'positions.Departament_id', '=', 'departaments.id')
+            ->leftjoin('outputs','outputs.id', '=', 'employees.Output_id')
+            ->groupBy('employees.id');
+            //$query = $quer->groupBy('employees.id');
+            $departamentos = Departamento::select('id', 'Departament_ES');
+            
+            
+            
+            $ban = 0;
+            for ($i=0; $i < count($request['Departaments']) ; $i++) { 
+                if($request['Departaments'][$i] == "Todo"){
+                    $ban = 1;
+                }
+            }
+
+            if($ban == 1){
+                $empleados = $query->orderBy('Paternal', 'ASC')->get();
+            }else{
+                for ($i=0; $i < count($request['Departaments']) ; $i++) { 
+                    $query->orWhere('Departament_id', '=', $request['Departaments'][$i]);
+                    $departamentos->orWhere('id', '=', $request['Departaments'][$i]);
+                }
+                 $empleados = $query->orderBy('Paternal', 'ASC')->get();
+                 
+            }
+            $departamentos = $departamentos->get();
+            if($request['rep_rotacion'] == "Resumen"){
+                if($request['formato'] == "PDF"){
+                    $pdf = \PDF::loadView('Pdf.vacaciones_resumen', ['departamentos' => $departamentos, 'empleados' => $empleados])->setPaper('letter', 'protrait');
+                    return $pdf->download('resumen_vacaciones.pdf');
+                }
+                if($request['formato'] == "XLS"){
+                    return (new VacacionesExport($departamentos, $empleados))->download('resumen_vacaciones.xlsx');
+                }
+            }
+
+            if($request['rep_rotacion'] == "anual"){
+                if($request['formato'] == "PDF"){
+
+                    $pdf = \PDF::loadView('Pdf.rotacion_concentrado', ['empleados' => $empleados])->setPaper('letter', 'protrait');
+                    return $pdf->download('rotacion_concentrado.pdf');
+                }
+                if($request['formato'] == "XLS"){
+                    return (new RotacionExport($departamentos, $empleados))->download('rotacion_concentrado.xlsx');
+                }
+            }
+        //Condicion para reporte rotacion de personal rango de fecha altas
+            if($request['rep_rotacion'] == "altas"){
+                /** Validación de reportes**/
+                if(empty($request['date1']) || empty($request['date2'])){
+                    throw new Exception("Debe de elegir fecha de inicio y fecha de fin.");
+                }
+                /** Validación de reportes**/
+                if($request['formato'] == "PDF"){
+                    $pdf = \PDF::loadView('Pdf.vacaciones_fechas', ['empleados' => $empleados, 'fecha_inicio' => $request['date1'], 'fecha_fin' => $request['date2'], 'departaments' => $request['Departaments']])->setPaper('letter', 'protrait');
+                    return $pdf->download('fechas_vacaciones.pdf');
+                }
+                if($request['formato'] == "XLS"){
+                     return (new RotacionExportAltas($departamentos, $empleados, $request['date1'], $request['date2'], $request['Departaments']))->download('altas_rotacion.xlsx');
+                }
+            }
+        //Condicion para reporte rotacion de personal rango de fecha bajas
+             if($request['rep_rotacion'] == "bajas"){
+                /** Validación de reportes**/
+                if(empty($request['date1']) || empty($request['date2'])){
+                    throw new Exception("Debe de elegir fecha de inicio y fecha de fin.");
+                }
+                /** Validación de reportes**/
+                if($request['formato'] == "PDF"){
+                    $pdf = \PDF::loadView('Pdf.vacaciones_fechas', ['empleados' => $empleados, 'fecha_inicio' => $request['date1'], 'fecha_fin' => $request['date2'], 'departaments' => $request['Departaments']])->setPaper('letter', 'protrait');
+                    return $pdf->download('fechas_vacaciones.pdf');
+                }
+                if($request['formato'] == "XLS"){
+                     return (new RotacionExportBajas($departamentos, $empleados, $request['date1'], $request['date2'], $request['Departaments']))->download('bajas_rotacion.xlsx');
                 }
             }
 
